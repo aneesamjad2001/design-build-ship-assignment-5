@@ -113,7 +113,8 @@ export function TripCard({ trip, stations, nearby, flashes, now, dimmed }: Props
   return (
     <article
       aria-labelledby={titleId}
-      className={`rounded-2xl border border-line bg-surface p-4 shadow-sm transition-opacity ${dimmed ? "opacity-60" : ""}`}
+      // 80%, not lower: dimmed muted text must still pass AA (scripts/contrast.mjs checks it)
+      className={`rounded-2xl border border-line bg-surface p-4 shadow-sm transition-opacity ${dimmed ? "opacity-80" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
         <h2 id={titleId} className="min-w-0 truncate text-lg font-semibold">
@@ -128,11 +129,12 @@ export function TripCard({ trip, stations, nearby, flashes, now, dimmed }: Props
         </Link>
       </div>
 
-      {/* The answer: one big word and one number. Announced when it changes. */}
+      {/* The answer: one big word and one number. Only the word is announced when it
+          changes (Go → No docks); every count change would be constant noise. */}
       <div aria-live="polite" aria-atomic="true">
         <VerdictBadge tone={v.tone} word={v.word} />
-        <p className="mt-1.5 text-base">{v.line}</p>
       </div>
+      <p className="mt-1.5 text-base">{v.line}</p>
 
       <dl className="mt-3 divide-y divide-line border-t border-line pt-1">
         <EndRow kind="start" s={from} flash={flashes.get(trip.from_station_id)} now={now} />

@@ -65,8 +65,9 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
     return () => clearInterval(id);
   }, []);
 
-  /** Full read. Returns the station ids to listen to. */
-  const load = useCallback(async (db: SupabaseClient): Promise<string[]> => {
+  /** Full read. Returns the station ids to listen to. `isCurrent` drops a read that
+   *  finishes after its connection was replaced, so it can't overwrite newer numbers. */
+  const load = useCallback(async (db: SupabaseClient, isCurrent: () => boolean = () => true): Promise<string[]> => {
     const tripsRes = await db
       .from("trips")
       .select("id,label,from_station_id,to_station_id,from_backup_ids,to_backup_ids,created_at")
@@ -95,6 +96,7 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
         .maybeSingle(),
     ]);
     for (const r of [st, nb, last, lastOk]) if (r.error) throw new Error(r.error.message);
+    if (!isCurrent()) return [];
 
     const map = new Map<string, Station>();
     for (const row of (st.data ?? []) as Record<string, unknown>[]) map.set(row.station_id as string, pickStation(row));
@@ -143,6 +145,7 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
   useEffect(() => {
     if (!supabase) return;
     let session = { alive: false, channel: null as RealtimeChannel | null };
+    let retry: ReturnType<typeof setTimeout> | undefined;
 
     const start = async () => {
       const mine = { alive: true, channel: null as RealtimeChannel | null };
@@ -150,12 +153,16 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
       setConnection("connecting");
       let ids: string[];
       try {
-        ids = await load(supabase);
+        ids = await load(supabase, () => mine.alive);
       } catch (e) {
         if (!mine.alive) return;
         setLoadError(e instanceof Error ? e.message : String(e));
         setLoaded(true);
         setConnection("reconnecting");
+        // Flaky phone data: try again in 5 s rather than saying "Reconnecting…" forever.
+        retry = setTimeout(() => {
+          if (mine.alive) void start();
+        }, 5000);
         return;
       }
       if (!mine.alive) return;
@@ -179,7 +186,7 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
         if (!mine.alive) return;
         if (status === "SUBSCRIBED") {
           setConnection("live");
-          if (joinedBefore) void load(supabase).catch(() => {});
+          if (joinedBefore) void load(supabase, () => mine.alive).catch(() => {});
           joinedBefore = true;
         } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
           setConnection("reconnecting");
@@ -189,6 +196,7 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
     };
 
     const stop = () => {
+      clearTimeout(retry);
       session.alive = false;
       if (session.channel) void supabase.removeChannel(session.channel);
       session.channel = null;
@@ -219,13 +227,26 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
   );
 
   // When stale, look up the very latest run (any kind) once a minute, to say why.
+  // If it carries a NEWER Divvy feed than we have, Divvy and our checker are fine and we
+  // missed Realtime messages: re-read and re-subscribe instead of blaming anyone.
   const isStale = f.state === "stale";
+  const lastOkRef = useRef(lastOkFeedAt);
+  useEffect(() => {
+    lastOkRef.current = lastOkFeedAt;
+  }, [lastOkFeedAt]);
   useEffect(() => {
     if (!supabase || !isStale) return;
     let cancelled = false;
     const look = async () => {
       const r = await supabase.from("worker_runs").select(RUN_COLUMNS).order("ran_at", { ascending: false }).limit(1).maybeSingle();
-      if (!cancelled && !r.error) setProbe((r.data as WorkerRun | null) ?? null);
+      if (cancelled || r.error) return;
+      const run = (r.data as WorkerRun | null) ?? null;
+      const ours = lastOkRef.current;
+      if (run?.ok && run.feed_updated_at && (!ours || Date.parse(run.feed_updated_at) > Date.parse(ours))) {
+        setReloads((n) => n + 1);
+        return;
+      }
+      setProbe(run);
     };
     void look();
     const id = setInterval(look, 60_000);

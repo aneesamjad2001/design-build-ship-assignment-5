@@ -42,6 +42,15 @@ test("down outranks reconnecting; reconnecting outranks fresh", () => {
   assert.equal(freshness({ ...base, connection: "reconnecting", latest: { ...ok(1), ok: false, error: "Divvy returned HTTP 503" } }).state, "down");
 });
 
+test("returning to the tab (re-reading) says Reconnecting, not Stale", () => {
+  assert.equal(freshness({ ...base, connection: "connecting", lastOkFeedAt: iso(600_000) }).state, "reconnecting");
+});
+
+test("a Divvy format change is blamed on Divvy, not on us", () => {
+  const f = freshness({ ...base, latest: { ...ok(3_000), ok: false, error: "712 of 2079 stations failed validation" } });
+  assert.equal(f.state === "down" && f.reason, "divvy");
+});
+
 test("ago reads naturally", () => {
   assert.equal(ago(40_000), "40 s ago");
   assert.equal(ago(150_000), "3 min ago");

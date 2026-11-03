@@ -47,7 +47,7 @@ recorded with its reason.
 ```
 npm install
 npm run dev      # needs .env.local: Clerk keys + NEXT_PUBLIC_SUPABASE_URL / _PUBLISHABLE_KEY
-npm test         # 35 tests (page logic + worker)
+npm test         # 37 tests (page logic + worker)
 npm run build
 npm run lint
 ```

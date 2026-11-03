@@ -51,13 +51,16 @@ function BackupPicker({
   onChange: (ids: string[]) => void;
 }) {
   const [near, setNear] = useState<Near[] | null>(null);
+  const [nearError, setNearError] = useState(false);
   const legendId = useId();
 
   useEffect(() => {
     if (!db) return;
     let cancelled = false;
-    db.rpc("dockcheck_nearby", { p_station_ids: [stationId], p_radius_m: 1200, p_per_origin: 6 }).then(({ data }) => {
-      if (!cancelled) setNear(((data ?? []) as Near[]).map((n) => ({ station_id: n.station_id, name: n.name, distance_m: n.distance_m })));
+    db.rpc("dockcheck_nearby", { p_station_ids: [stationId], p_radius_m: 1200, p_per_origin: 6 }).then(({ data, error }) => {
+      if (cancelled) return;
+      setNearError(!!error);
+      setNear(((data ?? []) as Near[]).map((n) => ({ station_id: n.station_id, name: n.name, distance_m: n.distance_m })));
     });
     return () => {
       cancelled = true;
@@ -73,6 +76,8 @@ function BackupPicker({
       </p>
       {near === null ? (
         <p className="mt-2 text-sm text-muted">Finding stations nearby…</p>
+      ) : nearError ? (
+        <p className="mt-2 text-sm text-error-text">Couldn&rsquo;t load nearby stations. You can save the trip without backups.</p>
       ) : near.length === 0 ? (
         <p className="mt-2 text-sm text-muted">No other dock station within a 15-minute walk.</p>
       ) : (
@@ -296,7 +301,13 @@ export function TripForm({ tripId }: { tripId?: string }) {
                 >
                   Yes, delete it
                 </button>
-                <button type="button" onClick={() => setConfirmDelete(false)} className="flex-1 rounded-xl border border-line px-4 py-3 font-semibold">
+                {/* Focus lands on the safe choice when the question appears. */}
+                <button
+                  type="button"
+                  autoFocus
+                  onClick={() => setConfirmDelete(false)}
+                  className="flex-1 rounded-xl border border-line px-4 py-3 font-semibold"
+                >
                   Keep it
                 </button>
               </div>

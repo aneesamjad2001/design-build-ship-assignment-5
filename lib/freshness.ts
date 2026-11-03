@@ -32,8 +32,9 @@ export type FreshnessInput = {
 
 const t = (iso: string | null | undefined) => (iso ? Date.parse(iso) : null);
 
-/** Failures whose message is about Divvy are "can't reach Divvy"; anything else is ours. */
-export const blamesDivvy = (error: string | null) => !!error && /divvy/i.test(error);
+/** Failures about Divvy (unreachable, or its feed failed validation) are "can't reach
+ *  Divvy"; anything else (our database, our code) is ours. */
+export const blamesDivvy = (error: string | null) => !!error && /divvy|failed validation/i.test(error);
 
 export function freshness(i: FreshnessInput): Freshness {
   if (!i.loaded) return { state: "loading" };
@@ -42,7 +43,9 @@ export function freshness(i: FreshnessInput): Freshness {
   if (i.latest && !i.latest.ok) {
     return { state: "down", feedAt, reason: blamesDivvy(i.latest.error) ? "divvy" : "checker" };
   }
-  if (i.connection === "reconnecting") return { state: "reconnecting", feedAt };
+  // Coming back to the tab re-reads first ("connecting"): say so, rather than flashing
+  // "Stale" for old numbers that are about to be replaced.
+  if (i.connection === "reconnecting" || i.connection === "connecting") return { state: "reconnecting", feedAt };
 
   if (feedAt === null || i.now - feedAt > STALE_AFTER_MS) {
     const checkedAt = t(i.probe?.ran_at);

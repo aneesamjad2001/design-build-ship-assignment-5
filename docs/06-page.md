@@ -69,7 +69,7 @@ outline for the same time instead.
 | Rule | How |
 |---|---|
 | Glanceable, phone-first | One column, `max-w-md`; the word is 36 px; the answer is two lines |
-| Status never color alone | Word + icon shape + color. Contrast: `scripts/contrast.mjs` checks all 34 pairs in light and dark against WCAG AA, reading the colors from `globals.css`. All pass (lowest text pair 6.95:1) |
+| Status never color alone | Word + icon shape + color. Contrast: `scripts/contrast.mjs` checks all 46 pairs in light and dark against WCAG AA, reading the colors from `globals.css`, including cards dimmed to 80% when numbers may be out of date. All pass (lowest: dimmed muted text, 4.56:1) |
 | No surprise UI | Backups appear only with a heading and a reason; the example on the signed-out page is labeled *Example*; the 8-trip limit says why |
 | Remember what people tell you | Trips, names and chosen backups are saved per person (RLS) |
 | Motion explains change | The 2.5 s glow; respects reduced motion |
@@ -79,7 +79,7 @@ outline for the same time instead.
 
 ## Tests
 
-`npm test` runs **35 tests**: 15 for the page logic (`lib/`) and 20 for the worker.
+`npm test` runs **37 tests**: 17 for the page logic (`lib/`) and 20 for the worker.
 `npm run build` type-checks everything; `npm run lint` is clean.
 
 ## Decisions made while building
@@ -91,3 +91,28 @@ outline for the same time instead.
   to return to, and the hint says so.
 - **8 trips at most**: 8 trips × 2 ends × 4 nearby + the ends stays under Realtime's 100-id
   filter.
+
+## Final review (Claude + an independent reviewer)
+
+Codex had hit its usage limit, so a fresh Claude agent reviewed the page **independently**:
+it got the code and the rules, not my conclusions. I had found one issue on my own
+(#2), and the reviewer found it too. Each finding was checked against the code before
+fixing it:
+
+| # | Finding | Done |
+|---|---|---|
+| 1 | A failed re-read (flaky phone data) never retried: *Reconnecting…* forever | Retries every 5 s |
+| 2 | If Realtime went quiet, *Stale* would blame Divvy | When the latest run has a **newer** feed than the page, the page knows it missed messages and re-reads and re-subscribes itself |
+| 3 | Returning to the tab flashed *Stale* while re-reading | Says *Reconnecting…* during the re-read (tested) |
+| 4 | Screen readers heard every count change on every card | Only the word (Go → No docks) is announced |
+| 5 | Dimmed cards at 60% failed contrast (muted text 2.91:1) | 80%, and `contrast.mjs` now checks dimmed text too (4.56:1) |
+| 6 | A Divvy format change was blamed on "our checker" | *Failed validation* counts as Divvy (tested) |
+| 7 | Arrowing through station matches could highlight one out of view | Scrolls it into view |
+| 8 | Opening *Delete* lost keyboard focus | Focus goes to *Keep it*, the safe choice |
+| 9 | A late re-read could overwrite newer numbers | Dropped if its connection was replaced |
+| 11 | A failed backup lookup looked like "no stations nearby" | Says it couldn't load them |
+| 10 | One failed run shows *Down* for ~10 s | Kept on purpose: *Down* the moment a run fails is the honest answer, and the next run clears it |
+
+Also confirmed from Supabase's Realtime logs: while the author tested on the phone
+(22:01–22:15 UTC), Realtime ran a Postgres Changes stream for the page, and it stopped
+*"due to no active subscriptions"* when the tab closed. No errors.

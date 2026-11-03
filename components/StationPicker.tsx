@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useId, useMemo, useState } from "react";
+import { forwardRef, useEffect, useId, useMemo, useState } from "react";
 
 export type PickerStation = { station_id: string; name: string; lat: number; lon: number };
 
@@ -39,6 +39,11 @@ export const StationPicker = forwardRef<HTMLInputElement, Props>(function Statio
   }, [query, stations]);
 
   const showList = open && typed !== null && matches.length > 0;
+
+  // Arrowing down past the bottom of the list keeps the highlighted station in view.
+  useEffect(() => {
+    if (showList) document.getElementById(`${id}-opt-${active}`)?.scrollIntoView({ block: "nearest" });
+  }, [showList, active, id]);
   const choose = (s: PickerStation) => {
     onChange(s.station_id);
     setTyped(null);

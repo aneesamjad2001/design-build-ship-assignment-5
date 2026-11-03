@@ -29,13 +29,27 @@ const pairs = [
   ["focus", "surface", 3], ["focus", "bg", 3], // focus ring: non-text, 3:1
 ];
 
+// Cards dim to this opacity when the numbers may be out of date (TripCard.tsx).
+const DIM = 0.8;
+const hex = (c) => "#" + c.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
+const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const over = (fg, bg, t) => hex(rgb(fg).map((v, i) => v * t + rgb(bg)[i] * (1 - t)));
+
 let failed = 0;
+const report = (ok, label, r, min) => {
+  if (!ok) failed++;
+  console.log(`${ok ? "pass" : "FAIL"}  ${label} ${r.toFixed(2)}:1 (needs ${min})`);
+};
 for (const [name, theme] of [["light", light], ["dark", dark]]) {
   for (const [fg, bg, min] of pairs) {
     const r = ratio(theme[fg], theme[bg]);
-    const ok = r >= min;
-    if (!ok) failed++;
-    console.log(`${ok ? "pass" : "FAIL"}  ${name.padEnd(5)} ${fg.padEnd(12)} on ${bg.padEnd(9)} ${r.toFixed(2)}:1 (needs ${min})`);
+    report(r >= min, `${name.padEnd(5)} ${fg.padEnd(12)} on ${bg.padEnd(9)}`, r, min);
+  }
+  // Dimmed card: both the text and the card are blended with the page behind them.
+  for (const fg of ["text", "muted", "go-text", "tight-text", "no-text", "unsure-text"]) {
+    const cardBg = fg.endsWith("-text") && fg !== "muted" ? theme[fg.replace("-text", "-bg")] : theme.surface;
+    const r = ratio(over(theme[fg], theme.bg, DIM), over(cardBg, theme.bg, DIM));
+    report(r >= 4.5, `${name.padEnd(5)} ${fg.padEnd(12)} dimmed ${DIM} `, r, 4.5);
   }
 }
 process.exit(failed ? 1 : 0);
