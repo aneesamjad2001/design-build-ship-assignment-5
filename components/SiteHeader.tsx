@@ -23,7 +23,12 @@ export function SiteHeader() {
           Dockcheck
         </Link>
         <Show when="signed-in">
-          <UserButton />
+          <div className="flex items-center gap-3">
+            <Link href="/system" className="rounded-lg px-2 py-1 text-sm font-medium text-accent underline-offset-2 hover:underline">
+              Under the hood
+            </Link>
+            <UserButton />
+          </div>
         </Show>
       </div>
     </header>

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { FLASH_MS } from "@/lib/useDockData";
-import type { Flash } from "@/lib/useDockData";
+import { FLASH_MS, HISTORY_MS } from "@/lib/useDockData";
+import type { Change, Flash } from "@/lib/useDockData";
+import { series, sparkPath, trend } from "@/lib/trend";
 import { backups, bikeSplit, endState, plural, verdict } from "@/lib/verdict";
 import type { Backup, EndKind } from "@/lib/verdict";
 import type { Nearby, Station, Trip } from "@/lib/types";
@@ -14,6 +15,7 @@ type Props = {
   stations: Map<string, Station>;
   nearby: Nearby[];
   flashes: Map<string, Flash>;
+  history: Map<string, Change[]>;
   now: number;
   dimmed: boolean;
 };
@@ -30,8 +32,33 @@ function Num({ value, flash, now, field }: { value: number; flash?: Flash; now: 
   );
 }
 
+/** The last hour at one end: a step sparkline, the 15-minute change in words, and a
+ *  warning only when it'll run out soon. The words carry it; the line only illustrates. */
+function TrendLine({ kind, s, changes, now }: { kind: EndKind; s: Station; changes: Change[] | undefined; now: number }) {
+  if (!changes || now === 0) return null;
+  const field = kind === "start" ? "bikes" : "docks";
+  const since = now - HISTORY_MS;
+  const pts = series(
+    changes.map((c) => ({ t: c.t, before: c[`${field}_before`], after: c[`${field}_after`] })),
+    s[field],
+    now,
+    since,
+  );
+  const t = trend(pts, now, kind === "start" ? "bike" : "dock");
+  if (!t) return null;
+  return (
+    <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted">
+      <svg viewBox="0 0 60 16" className="h-4 w-[60px] shrink-0" aria-hidden>
+        <path d={sparkPath(pts, since, now, 60, 16)} fill="none" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+      <span>{t.text}</span>
+      {t.warning && <span className="font-semibold text-tight-text">{t.warning}</span>}
+    </span>
+  );
+}
+
 /** One end of the trip, in words: what it has, or why we can't say. */
-function EndRow({ kind, s, flash, now }: { kind: EndKind; s: Station | undefined; flash?: Flash; now: number }) {
+function EndRow({ kind, s, flash, now, changes }: { kind: EndKind; s: Station | undefined; flash?: Flash; now: number; changes?: Change[] }) {
   const label = kind === "start" ? "From" : "To";
   const state = endState(s, kind);
   let body: React.ReactNode;
@@ -62,6 +89,7 @@ function EndRow({ kind, s, flash, now }: { kind: EndKind; s: Station | undefined
       <dd className="min-w-0">
         <span className="block truncate font-medium">{s?.name ?? "Unknown station"}</span>
         {body}
+        {s && state !== "unknown" && state !== "closed" && <TrendLine kind={kind} s={s} changes={changes} now={now} />}
       </dd>
     </div>
   );
@@ -103,7 +131,7 @@ function BackupList({ kind, list, flashes, now }: { kind: EndKind; list: Backup[
   );
 }
 
-export function TripCard({ trip, stations, nearby, flashes, now, dimmed }: Props) {
+export function TripCard({ trip, stations, nearby, flashes, history, now, dimmed }: Props) {
   const from = stations.get(trip.from_station_id);
   const to = stations.get(trip.to_station_id);
   const v = verdict(from, to, fmt);
@@ -137,8 +165,8 @@ export function TripCard({ trip, stations, nearby, flashes, now, dimmed }: Props
       <p className="mt-1.5 text-base">{v.line}</p>
 
       <dl className="mt-3 divide-y divide-line border-t border-line pt-1">
-        <EndRow kind="start" s={from} flash={flashes.get(trip.from_station_id)} now={now} />
-        <EndRow kind="end" s={to} flash={flashes.get(trip.to_station_id)} now={now} />
+        <EndRow kind="start" s={from} flash={flashes.get(trip.from_station_id)} now={now} changes={history.get(trip.from_station_id)} />
+        <EndRow kind="end" s={to} flash={flashes.get(trip.to_station_id)} now={now} changes={history.get(trip.to_station_id)} />
       </dl>
 
       {v.problem && <BackupList kind={v.problem} list={list} flashes={flashes} now={now} />}

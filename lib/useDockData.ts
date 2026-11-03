@@ -16,6 +16,10 @@ export const MAX_TRIPS = 8;
 export const FLASH_MS = 2500;
 
 type NearbyRef = { origin_id: string; station_id: string; distance_m: number };
+/** One logged change at a station (station_changes), oldest first per station. */
+export type Change = { t: number; bikes_before: number | null; bikes_after: number | null; docks_before: number | null; docks_after: number | null };
+/** How much history the cards draw: the last hour. */
+export const HISTORY_MS = 60 * 60_000;
 export type Flash = { at: number; bikes: boolean; docks: boolean };
 
 export type DockData = {
@@ -26,6 +30,7 @@ export type DockData = {
   stations: Map<string, Station>;
   nearby: Nearby[];
   flashes: Map<string, Flash>;
+  history: Map<string, Change[]>;
   now: number;
   reload: () => void;
 };
@@ -49,6 +54,7 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
   const [probe, setProbe] = useState<WorkerRun | null>(null);
   const [connection, setConnection] = useState<Connection>("connecting");
   const [flashes, setFlashes] = useState<Map<string, Flash>>(new Map());
+  const [history, setHistory] = useState<Map<string, Change[]>>(new Map());
   const [now, setNow] = useState(0);
   const [reloads, setReloads] = useState(0);
   const stationsRef = useRef(stations);
@@ -78,7 +84,8 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
     const ends = unique(ts.flatMap((t) => [t.from_station_id, t.to_station_id]));
     const pinned = unique(ts.flatMap((t) => [...t.from_backup_ids, ...t.to_backup_ids]));
 
-    const [st, nb, last, lastOk] = await Promise.all([
+    const historySince = new Date(Date.now() - HISTORY_MS).toISOString();
+    const [st, nb, last, lastOk, hist] = await Promise.all([
       ends.length
         ? db.from("stations").select(STATION_COLUMNS).in("station_id", unique([...ends, ...pinned]))
         : Promise.resolve({ data: [], error: null }),
@@ -94,8 +101,17 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
         .order("ran_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
+      ends.length
+        ? db
+            .from("station_changes")
+            .select("station_id,changed_at,bikes_before,bikes_after,docks_before,docks_after")
+            .in("station_id", ends)
+            .gte("changed_at", historySince)
+            .order("changed_at")
+            .limit(1000)
+        : Promise.resolve({ data: [], error: null }),
     ]);
-    for (const r of [st, nb, last, lastOk]) if (r.error) throw new Error(r.error.message);
+    for (const r of [st, nb, last, lastOk, hist]) if (r.error) throw new Error(r.error.message);
     if (!isCurrent()) return [];
 
     const map = new Map<string, Station>();
@@ -107,7 +123,23 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
       refs.push({ origin_id: row.origin_id as string, station_id: s.station_id, distance_m: row.distance_m as number });
     }
 
+    const h = new Map<string, Change[]>();
+    for (const row of (hist.data ?? []) as Record<string, unknown>[]) {
+      const id = row.station_id as string;
+      const list = h.get(id) ?? [];
+      list.push({
+        t: Date.parse(row.changed_at as string),
+        bikes_before: row.bikes_before as number | null,
+        bikes_after: row.bikes_after as number | null,
+        docks_before: row.docks_before as number | null,
+        docks_after: row.docks_after as number | null,
+      });
+      h.set(id, list);
+    }
+
+    for (const id of ends) if (!h.has(id)) h.set(id, []);
     setTrips(ts);
+    setHistory(h);
     setStations(map);
     setNearbyRefs(refs);
     setLatest((last.data as WorkerRun | null) ?? null);
@@ -128,7 +160,15 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
     const docks = old.docks !== next.docks;
     setStations((prev) => new Map(prev).set(next.station_id, next));
     if (bikes || docks) {
-      setFlashes((prev) => new Map(prev).set(next.station_id, { at: Date.now(), bikes, docks }));
+      const at = Date.now();
+      setFlashes((prev) => new Map(prev).set(next.station_id, { at, bikes, docks }));
+      // The sparkline grows live: the same before → after the worker just logged.
+      setHistory((prev) => {
+        const list = prev.get(next.station_id);
+        if (!list) return prev; // not a trip end
+        const change: Change = { t: at, bikes_before: old.bikes, bikes_after: next.bikes, docks_before: old.docks, docks_after: next.docks };
+        return new Map(prev).set(next.station_id, [...list.filter((c) => c.t >= at - HISTORY_MS), change]);
+      });
     }
   }, []);
 
@@ -273,6 +313,7 @@ export function useDockData(supabase: SupabaseClient | null): DockData {
     stations,
     nearby,
     flashes,
+    history,
     now,
     reload: () => setReloads((n) => n + 1),
   };

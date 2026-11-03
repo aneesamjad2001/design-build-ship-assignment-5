@@ -13,6 +13,17 @@ Divvy GBFS ──► worker (Supabase Edge Function, Supabase Cron every 10 s)
            ──► Supabase Realtime ──► page on Vercel (updates without a refresh)
 ```
 
+## What you see
+
+- **Each trip, one big word:** *Go*, *Tight*, *No bikes*, *No docks*, *Closed* or *Unsure*,
+  with the one number that matters and backups (with walking time) when there's a problem.
+- **Where it's heading:** a one-hour sparkline per end, *−4 bikes in 15 min*, and
+  *At this pace, out of bikes in ~11 min* when it's about to run out.
+- **How fresh it is, always:** *Live · Divvy updated 40 s ago*, or *Stale* / *Down* /
+  *Reconnecting* with the reason in words.
+- **Under the hood** (`/system`): the whole pipeline running live, and every run arriving
+  every 10 seconds.
+
 ## It works
 
 Over its first 16.8 hours the worker ran **6,032 times** (one every 10 s). **83.4%** of runs
@@ -47,7 +58,7 @@ recorded with its reason.
 ```
 npm install
 npm run dev      # needs .env.local: Clerk keys + NEXT_PUBLIC_SUPABASE_URL / _PUBLISHABLE_KEY
-npm test         # 37 tests (page logic + worker)
+npm test         # 43 tests (page logic + worker)
 npm run build
 npm run lint
 ```

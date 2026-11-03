@@ -1,7 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Adding and editing trips needs an account; the home page explains itself to signed-out visitors.
-const needsAccount = createRouteMatcher(["/trips(.*)"]);
+const needsAccount = createRouteMatcher(["/trips(.*)", "/system"]);
 
 // Our own sign-in/up pages, set here rather than in env vars: they aren't secrets.
 export default clerkMiddleware(

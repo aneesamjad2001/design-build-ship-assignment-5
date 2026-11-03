@@ -69,6 +69,7 @@ export function TripBoard() {
                   stations={data.stations}
                   nearby={data.nearby}
                   flashes={data.flashes}
+                  history={data.history}
                   now={data.now}
                   dimmed={dimmed}
                 />

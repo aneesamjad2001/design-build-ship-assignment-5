@@ -79,7 +79,7 @@ outline for the same time instead.
 
 ## Tests
 
-`npm test` runs **37 tests**: 17 for the page logic (`lib/`) and 20 for the worker.
+`npm test` runs **43 tests**: 23 for the page logic (`lib/`) and 20 for the worker.
 `npm run build` type-checks everything; `npm run lint` is clean.
 
 ## Decisions made while building
@@ -116,3 +116,29 @@ fixing it:
 Also confirmed from Supabase's Realtime logs: while the author tested on the phone
 (22:01–22:15 UTC), Realtime ran a Postgres Changes stream for the page, and it stopped
 *"due to no active subscriptions"* when the tab closed. No errors.
+
+## Two features that show the data, not just the latest number
+
+**Trends on every card** (`lib/trend.ts`, tested). Each end of a trip gets a one-hour step
+sparkline and the 15-minute change in words: *−4 bikes in 15 min*, *Steady for 15 min*.
+When a station is emptying (or filling) fast enough to run out within 30 minutes, it
+warns: ***At this pace, out of bikes in ~11 min***. The history comes from
+`station_changes`, which the worker logs before → after on every real change. Live
+updates add new points as they arrive, so the line grows while you watch. The words carry
+the meaning; the line only illustrates it, so it's `aria-hidden`.
+
+**Under the hood** (`/system`, linked in the header). The live system itself, for anyone
+who wants to see how it works:
+- The pipeline, **Divvy → worker → Postgres → Realtime → this page**, each with its live
+  state in words (*Published 40 s ago*, *Ran 3 s ago*, *Connected to this page*) and one
+  number.
+- The **last 60 runs** as a strip that grows every 10 s. It uses three shapes, not just
+  three colors: a tall bar (*wrote changes*), a short bar (*nothing new*) and a cross
+  (*failed*), with counts in words.
+- Totals since the worker started: runs, failures, *found nothing new* %, changes logged,
+  and the database's own efficiency: rows written vs. rows a naive "rewrite everything"
+  worker would have written.
+
+It's the only page that listens to **every** run (6 a minute, only while open). The stats
+come from one small function, `dockcheck_system_stats()` (migration `…224231`), so the
+page never downloads thousands of runs to add them up.
