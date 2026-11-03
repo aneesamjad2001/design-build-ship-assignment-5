@@ -42,6 +42,7 @@ recorded with its reason.
 | [`docs/04-schema.md`](docs/04-schema.md) | Tables, RLS and Realtime, tested as two users |
 | [`docs/05-worker.md`](docs/05-worker.md) | The worker, its live runs, and an independent Codex review |
 | [`docs/06-page.md`](docs/06-page.md) | The page: live updates, loading / fresh / stale / down, design rules |
+| [`docs/07-logs-trace-free-tiers.md`](docs/07-logs-trace-free-tiers.md) | The worker's last three runs explained, one real update traced to the screen, free tiers |
 
 ## Where things are
 
