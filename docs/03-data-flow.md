@@ -91,6 +91,19 @@ flowchart LR
    Signed-in people can **read** `stations` and `worker_runs`; nobody but the worker
    writes them. `trips` is per person with RLS.
 
+## What changed while building (see 05-worker.md, 06-page.md)
+
+- **The page doesn't hear every run.** It listens only to runs that changed something or
+  failed (`feed_unchanged=eq.false`), 1 in 6, to stay inside the Realtime budget. So the
+  bar shows Divvy's clock (*Divvy updated 40 s ago*), and the page's own clock still turns
+  it *stale* after 3 min. When stale, it looks up the latest run to say whether Divvy or
+  our checker stopped.
+- **The cron → worker secret is generated in Postgres** (Vault), not set by hand. A wrong
+  or missing secret gets 401 and no run row; the page sees that as *stale*.
+- **A watermark (`feed_state`)** refuses a feed older than one already applied, so
+  overlapping runs can't roll counts back (from the Codex review).
+- **Stations missing from a good feed** are marked *not reporting*.
+
 ## Free-tier budget
 
 | Service | Limit | Dockcheck |
