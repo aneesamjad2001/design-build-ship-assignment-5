@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# agent worktrees and local agent settings
+/.claude/worktrees/
+/.claude/settings.local.json
+
+# supabase local state
+/supabase/.temp/
+/supabase/.branches/
