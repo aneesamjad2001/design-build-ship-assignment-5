@@ -1,0 +1,506 @@
+{
+ "data": {
+  "stations": [
+   {
+    "station_id": "1850868044363584392",
+    "name": "University Ave & 59th St",
+    "short_name": "CHI01913",
+    "lon": -87.598906,
+    "lat": 41.787878,
+    "capacity": 15,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": true,
+    "station_type": "classic",
+    "external_id": "1850868044363584392",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "1850867138125484782",
+    "name": "Woodlawn Ave & 58th St",
+    "short_name": "CHI01996",
+    "lon": -87.596479,
+    "lat": 41.789381,
+    "capacity": 18,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": false,
+    "station_type": "classic",
+    "external_id": "1850867138125484782",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "a3aabfe3-a135-11e9-9cda-0a87ae2ba916",
+    "name": "Ellis Ave & 58th St",
+    "short_name": "CHI00460",
+    "lon": -87.601334,
+    "lat": 41.788746,
+    "capacity": 19,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": true,
+    "station_type": "classic",
+    "external_id": "a3aabfe3-a135-11e9-9cda-0a87ae2ba916",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "a3ad8072-a135-11e9-9cda-0a87ae2ba916",
+    "name": "University Ave & 57th St",
+    "short_name": "CHI00551",
+    "lon": -87.599861,
+    "lat": 41.791478,
+    "capacity": 48,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": false,
+    "station_type": "classic",
+    "external_id": "a3ad8072-a135-11e9-9cda-0a87ae2ba916",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "a3ad711d-a135-11e9-9cda-0a87ae2ba916",
+    "name": "Ellis Ave & 55th St",
+    "short_name": "CHI00583",
+    "lon": -87.6014497734,
+    "lat": 41.79430062054,
+    "capacity": 30,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": false,
+    "station_type": "classic",
+    "external_id": "a3ad711d-a135-11e9-9cda-0a87ae2ba916",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "2007796988006173238",
+    "name": "Melvina Ave & Giddings Ave",
+    "short_name": "CHI01954",
+    "lon": -87.78202,
+    "lat": 41.96648,
+    "capacity": 8,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": false,
+    "station_type": "classic",
+    "external_id": "2007796988006173238",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "a3a5de24-a135-11e9-9cda-0a87ae2ba916",
+    "name": "Lincoln Ave & Melrose St",
+    "short_name": "CHI00477",
+    "lon": -87.669435,
+    "lat": 41.9406,
+    "capacity": 15,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": true,
+    "station_type": "classic",
+    "external_id": "a3a5de24-a135-11e9-9cda-0a87ae2ba916",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "2277268816800494490",
+    "name": "Wabash Ave & Wacker Pl",
+    "short_name": "CHI02433",
+    "lon": -87.62603,
+    "lat": 41.88687,
+    "capacity": 30,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": false,
+    "station_type": "classic",
+    "external_id": "2277268816800494490",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "a3ac9d43-a135-11e9-9cda-0a87ae2ba916",
+    "name": "Western Ave & Walton St",
+    "short_name": "CHI00576",
+    "lon": -87.6865960164,
+    "lat": 41.89841768945,
+    "capacity": 23,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": true,
+    "station_type": "classic",
+    "external_id": "a3ac9d43-a135-11e9-9cda-0a87ae2ba916",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "2270318543790283704",
+    "name": "Broadway & Glenlake Ave  ",
+    "short_name": "CHI02429",
+    "lon": -87.65984,
+    "lat": 41.99235,
+    "capacity": 15,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": true,
+    "station_type": "classic",
+    "external_id": "2270318543790283704",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "a3ac1607-a135-11e9-9cda-0a87ae2ba916",
+    "name": "Ada St & Washington Blvd",
+    "short_name": "CHI00278",
+    "lon": -87.661206,
+    "lat": 41.88283,
+    "capacity": 15,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": true,
+    "station_type": "classic",
+    "external_id": "a3ac1607-a135-11e9-9cda-0a87ae2ba916",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "a3a48d5c-a135-11e9-9cda-0a87ae2ba916",
+    "name": "Elston Ave & Cortland St",
+    "short_name": "CHI00259",
+    "lon": -87.66674637794495,
+    "lat": 41.91643342912655,
+    "capacity": 23,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": true,
+    "station_type": "classic",
+    "external_id": "a3a48d5c-a135-11e9-9cda-0a87ae2ba916",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "a3b47cbc-a135-11e9-9cda-0a87ae2ba916",
+    "name": "Damen Ave & Lake St",
+    "short_name": "CHI00619",
+    "lon": -87.6768354,
+    "lat": 41.8849659,
+    "capacity": 16,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": false,
+    "station_type": "classic",
+    "external_id": "a3b47cbc-a135-11e9-9cda-0a87ae2ba916",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "2131429867387521772",
+    "name": "Damen Ave & Wabansia Ave",
+    "short_name": "CHI02133",
+    "lon": -87.67722,
+    "lat": 41.91225,
+    "capacity": 11,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": true,
+    "station_type": "classic",
+    "external_id": "2131429867387521772",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "1992234898774407528",
+    "name": "Pulaski Rd & 60th Pl",
+    "short_name": "CHI01884",
+    "lon": -87.72257,
+    "lat": 41.78315,
+    "capacity": 8,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": false,
+    "station_type": "classic",
+    "external_id": "1992234898774407528",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "2246215988797035830",
+    "name": "Bent Park",
+    "short_name": "CHI02390",
+    "lon": -87.724011,
+    "lat": 42.064494,
+    "region_id": "35",
+    "capacity": 6,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": false,
+    "station_type": "classic",
+    "external_id": "2246215988797035830",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "1936553212713581016",
+    "name": "Kedzie Ave & 52nd St",
+    "short_name": "CHI01849",
+    "lon": -87.70342,
+    "lat": 41.79906,
+    "capacity": 15,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": false,
+    "station_type": "classic",
+    "external_id": "1936553212713581016",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "2204206266051127252",
+    "name": "Oak Park Ave & Wellington Ave",
+    "short_name": "CHI02231",
+    "lon": -87.79586,
+    "lat": 41.93459,
+    "capacity": 8,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": false,
+    "station_type": "classic",
+    "external_id": "2204206266051127252",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "a3b0fae6-a135-11e9-9cda-0a87ae2ba916",
+    "name": "Glenwood Ave & Touhy Ave",
+    "short_name": "CHI01143",
+    "lon": -87.666058,
+    "lat": 42.012701,
+    "capacity": 15,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": true,
+    "station_type": "classic",
+    "external_id": "a3b0fae6-a135-11e9-9cda-0a87ae2ba916",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "a3a528d0-a135-11e9-9cda-0a87ae2ba916",
+    "name": "Stony Island Ave & 64th St",
+    "short_name": "CHI00557",
+    "lon": -87.586647,
+    "lat": 41.778881,
+    "capacity": 11,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "rental_methods": [
+     "KEY",
+     "CREDITCARD",
+     "TRANSITCARD"
+    ],
+    "has_kiosk": true,
+    "station_type": "classic",
+    "external_id": "a3a528d0-a135-11e9-9cda-0a87ae2ba916",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "2213470262787437820",
+    "name": "Public Rack - Halsted St Metra Station",
+    "address": "1530 S Halsted St, Chicago, IL 60607, United States",
+    "lon": -87.64683102,
+    "lat": 41.86043539,
+    "capacity": 4,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "has_kiosk": false,
+    "station_type": "lightweight",
+    "external_id": "2213470262787437820",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   },
+   {
+    "station_id": "1806749718607905182",
+    "name": "Public Rack - 63rd St and Natoma Ave",
+    "address": "6634 W 63rd St, Chicago, IL 60638, United States",
+    "lon": -87.7875789,
+    "lat": 41.777927,
+    "capacity": 2,
+    "rental_uris": {
+     "android": "https://chi.lft.to/lastmile_qr_scan",
+     "ios": "https://chi.lft.to/lastmile_qr_scan"
+    },
+    "has_kiosk": false,
+    "station_type": "lightweight",
+    "external_id": "1806749718607905182",
+    "electric_bike_surcharge_waiver": false,
+    "eightd_station_services": [],
+    "eightd_has_key_dispenser": false
+   }
+  ]
+ },
+ "last_updated": 1793672381,
+ "ttl": 60,
+ "version": "1.1"
+}
