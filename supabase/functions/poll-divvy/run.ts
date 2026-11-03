@@ -21,8 +21,8 @@ export type ApplyResult = { changed: number; unknown: number; missing: number; s
 
 export type Deps = {
   fetchJson(url: string): Promise<unknown>;
-  /** feed_updated_at of the latest ok run, or null. */
-  lastAppliedFeedAt(): Promise<string | null>;
+  /** The latest run of any kind, or null. */
+  lastRun(): Promise<{ ok: boolean; feed_updated_at: string | null } | null>;
   /** ran_at of the latest run that refreshed station info, or null. */
   lastInfoRefreshAt(): Promise<string | null>;
   /** public.apply_station_status: writes only real changes; refuses feeds older than one already applied. */
@@ -92,9 +92,11 @@ async function work(deps: Deps, opts: Options, started: number): Promise<Omit<Ru
     if (opts.refreshInfo) {
       await refreshInfo();
     } else {
-      // Divvy republishes about every 60 s; we run every 10 s. Same file = nothing to do.
-      const last = await deps.lastAppliedFeedAt();
-      if (last !== null && Date.parse(last) === Date.parse(status.feedUpdatedAt)) {
+      // Divvy republishes about every 60 s; we run every 10 s. Same file = nothing to do,
+      // unless the last run failed: then apply anyway, so the recovery is a run that the
+      // page hears about (it only listens to runs that changed something or failed).
+      const last = await deps.lastRun();
+      if (last?.ok && last.feed_updated_at !== null && Date.parse(last.feed_updated_at) === Date.parse(status.feedUpdatedAt)) {
         return result(true, { feed_unchanged: true });
       }
     }

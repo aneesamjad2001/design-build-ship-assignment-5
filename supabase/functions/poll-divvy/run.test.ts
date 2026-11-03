@@ -32,7 +32,7 @@ function fakeWorld(feeds: Record<string, unknown | Error>) {
       if (f instanceof Error) throw f;
       return f;
     },
-    lastAppliedFeedAt: async () => [...runs].reverse().find((r) => r.ok)?.feed_updated_at ?? null,
+    lastRun: async () => runs.at(-1) ?? null,
     lastInfoRefreshAt: async () => lastInfoRefreshAt,
     applyStatus: async (rows, feedAt) => {
       calls.applyStatus++;
@@ -104,6 +104,18 @@ test("same feed file again (Divvy publishes every ~60 s): recorded, nothing appl
   assert.equal(w.runs.length, 2); // still one row per run
 });
 
+test("after a failed run, the same feed is applied again (so the page hears the recovery)", async () => {
+  const w = fakeWorld({ [STATUS_URL]: status827, [INFO_URL]: info });
+  await runOnce(w.deps); // ok, applies 8:27
+  w.setFeed(STATUS_URL, new Error("Divvy returned HTTP 503"));
+  await runOnce(w.deps); // fails
+  w.setFeed(STATUS_URL, status827); // Divvy back, same file as before the failure
+  const run = await runOnce(w.deps);
+  assert.equal(run.ok, true);
+  assert.equal(run.feed_unchanged, false); // a run the page listens to
+  assert.equal(run.rows_changed, 0); // nothing new, and that's fine
+});
+
 test("Divvy down: a failed run is recorded with the reason, nothing written", async () => {
   const w = fakeWorld({ [STATUS_URL]: new Error("Divvy didn't answer within 8 s") });
   const run = await runOnce(w.deps);
@@ -163,8 +175,8 @@ test("overlapping run with an OLDER feed: refused, counts not rolled back", asyn
   await runOnce(w.deps); // applies 8:20
   w.setFeed(STATUS_URL, status827);
   await runOnce(w.deps); // applies 8:27
-  // A slow run that fetched 8:20 finishes now. lastAppliedFeedAt isn't consulted for it
-  // (it fetched before 8:27 landed), so force the apply path with refresh_info.
+  // A slow run that fetched 8:20 finishes now. It checked lastRun before 8:27 landed,
+  // so force the apply path with refresh_info to simulate that.
   w.setFeed(STATUS_URL, status820);
   const run = await runOnce(w.deps, { refreshInfo: true });
   assert.equal(run.ok, true);

@@ -50,10 +50,9 @@ async function db(path: string, init: RequestInit = {}): Promise<unknown> {
 const rpc = (name: string, args: unknown) =>
   db(`rpc/${name}`, { method: "POST", body: JSON.stringify(args) });
 
-async function latest(column: "feed_updated_at" | "ran_at", filter: string): Promise<string | null> {
-  const rows = (await db(`worker_runs?select=${column}&${filter}&order=ran_at.desc&limit=1`)) as
-    Array<Record<string, string | null>>;
-  return rows[0]?.[column] ?? null;
+async function latest<T>(select: string, filter = ""): Promise<T | null> {
+  const rows = (await db(`worker_runs?select=${select}${filter ? `&${filter}` : ""}&order=ran_at.desc&limit=1`)) as T[];
+  return rows[0] ?? null;
 }
 
 async function fetchJson(url: string): Promise<unknown> {
@@ -80,8 +79,9 @@ async function fetchJson(url: string): Promise<unknown> {
 
 const deps: Deps = {
   fetchJson,
-  lastAppliedFeedAt: () => latest("feed_updated_at", "ok=eq.true"),
-  lastInfoRefreshAt: () => latest("ran_at", "info_changed=not.is.null"),
+  lastRun: () => latest<{ ok: boolean; feed_updated_at: string | null }>("ok,feed_updated_at"),
+  lastInfoRefreshAt: async () =>
+    (await latest<{ ran_at: string }>("ran_at", "info_changed=not.is.null"))?.ran_at ?? null,
   applyStatus: async (rows: StatusRow[], feedUpdatedAt: string) =>
     (await rpc("apply_station_status", { p_rows: rows, p_feed_updated_at: feedUpdatedAt })) as ApplyResult,
   applyInformation: async (rows: InfoRow[]) =>
