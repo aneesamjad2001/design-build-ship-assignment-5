@@ -28,7 +28,7 @@ them for this assignment.
 | **curl** | Call the live source | `station_status.json` | **Works.** 2,079 stations, `ttl` 60, `last_updated` 04:54:41 UTC |
 | **Codex CLI** 0.162.1 | Independent review of the worker, RLS and Realtime setup by a different model | `codex exec -s read-only "Reply with exactly: codex ok"` | **Works.** Logged in with ChatGPT, replied `codex ok` |
 | **Supabase CLI** 3.0.0 (`npx supabase`) | Not needed: the MCP covers migrations, deploys, secrets and logs | `npx supabase projects list` | **Runs, not logged in** (`AccessTokenRequiredError`). Left that way. |
-| **Vercel CLI** 65.10.0 (`npx vercel`) | Set env vars on Vercel, read build logs, check the deployed URL | `npx vercel whoami` | **Runs, logged out.** The author logs in (`! npx vercel login`) before the deploy step. |
+| **Vercel CLI** 65.10.0 (`npx vercel`) | Set env vars on Vercel, read build logs, check the deployed URL | `npx vercel whoami`, `npx vercel teams ls` | **Works** after the author ran `! npx vercel login` (device code in the browser): `aneesamjad2001`, team *Anees* on the **Hobby** (free) plan. |
 | **Deno** | Run the Edge Function locally | `command -v deno` | **Not installed.** Not needed: the function is tested in two parts, the logic with Node against fixtures and the deployed function by calling it and reading `worker_runs`. |
 
 ## What the checks found that the next step must fix
