@@ -69,7 +69,7 @@ outline for the same time instead.
 | Rule | How |
 |---|---|
 | Glanceable, phone-first | One column, `max-w-md`; the word is 36 px; the answer is two lines |
-| Status never color alone | Word + icon shape + color. Contrast: `scripts/contrast.mjs` checks all 32 pairs in light and dark against WCAG AA, reading the colors from `globals.css`. All pass (lowest text pair 6.95:1) |
+| Status never color alone | Word + icon shape + color. Contrast: `scripts/contrast.mjs` checks all 34 pairs in light and dark against WCAG AA, reading the colors from `globals.css`. All pass (lowest text pair 6.95:1) |
 | No surprise UI | Backups appear only with a heading and a reason; the example on the signed-out page is labeled *Example*; the 8-trip limit says why |
 | Remember what people tell you | Trips, names and chosen backups are saved per person (RLS) |
 | Motion explains change | The 2.5 s glow; respects reduced motion |
