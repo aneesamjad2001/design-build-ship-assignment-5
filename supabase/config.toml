@@ -1,0 +1,7 @@
+# Dockcheck's Supabase settings that live with the code.
+project_id = "jdbvghqeemcduoeubtmp"
+
+[functions.poll-divvy]
+# Called by Supabase Cron with x-worker-secret (from Vault), not a user JWT.
+# The function checks the secret itself (see supabase/functions/poll-divvy/index.ts).
+verify_jwt = false

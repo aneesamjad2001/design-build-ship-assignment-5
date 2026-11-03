@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:worker": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test supabase/functions/poll-divvy/"
   },
   "dependencies": {
     "next": "16.4.2",
