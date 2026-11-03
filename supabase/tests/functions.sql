@@ -1,3 +1,7 @@
+-- ⚠ Run only on an EMPTY Dockcheck database (a Supabase branch, or before the worker is
+-- scheduled). It ends by deleting every station, and feeds older than the live watermark
+-- are refused. It was run this way in Step 4; see docs/04-schema.md for the results.
+--
 -- Part 1 (run alone): fetch the Step 1 samples from the repo. Note the three ids.
 select
   net.http_get('https://raw.githubusercontent.com/aneesamjad2001/design-build-ship-assignment-5/main/docs/source-samples/station_information.2026-11-02.json') as info_req,
@@ -43,21 +47,22 @@ select
 create temp table t(step int, label text, result jsonb) on commit drop;
 insert into t select 1, 'info: first load', to_jsonb(public.apply_station_information(info)) from fx;
 insert into t select 2, 'info: same again', to_jsonb(public.apply_station_information(info)) from fx;
-insert into t select 3, 'status 8:20 PM (first fill)', public.apply_station_status(a) from fx;
+insert into t select 3, 'status 8:20 PM (first fill)', public.apply_station_status(a, (select to_timestamp((content::jsonb->>'last_updated')::bigint) from net._http_response where id = (select a_req from ids))) from fx;
 insert into t select 4, 'change log rows', to_jsonb((select count(*) from public.station_changes));
-insert into t select 5, 'status 8:27 PM', public.apply_station_status(b) from fx;
+insert into t select 5, 'status 8:27 PM', public.apply_station_status(b, (select to_timestamp((content::jsonb->>'last_updated')::bigint) from net._http_response where id = (select b_req from ids))) from fx;
 insert into t select 6, 'change log rows', to_jsonb((select count(*) from public.station_changes));
-insert into t select 7, 'status 8:27 PM again', public.apply_station_status(b) from fx;
+insert into t select 7, 'status 8:27 PM again', public.apply_station_status(b, (select to_timestamp((content::jsonb->>'last_updated')::bigint) from net._http_response where id = (select b_req from ids))) from fx;
 insert into t select 8, 'one station reports now (silent -> live)',
-  public.apply_station_status(jsonb_set(b, '{0,reported_at}', to_jsonb(now()))) from fx;
+  public.apply_station_status(jsonb_set(b, '{0,reported_at}', to_jsonb(now())), (select to_timestamp((content::jsonb->>'last_updated')::bigint) from net._http_response where id = (select b_req from ids))) from fx;
 insert into t select 9, 'change log rows', to_jsonb((select count(*) from public.station_changes));
 insert into t select 10, 'unknown station id',
-  public.apply_station_status(b || jsonb_build_array(jsonb_set(b->0, '{station_id}', '"not-a-station"'))) from fx;
+  public.apply_station_status(b || jsonb_build_array(jsonb_set(b->0, '{station_id}', '"not-a-station"')), (select to_timestamp((content::jsonb->>'last_updated')::bigint) from net._http_response where id = (select b_req from ids))) from fx;
 insert into t select 11, 'example change row',
   (select to_jsonb(c) - 'id' from public.station_changes c join public.stations s using (station_id)
     where s.name like 'University Ave & 57th%' limit 1);
 
 delete from public.station_changes;
 delete from public.stations;
+update public.feed_state set status_applied_at = null where id;
 
 select step, label, result from t order by step;

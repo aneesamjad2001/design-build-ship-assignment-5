@@ -1,6 +1,6 @@
 -- Who can read and write what. Two pretend Clerk users (A, B) and a signed-out visitor.
 -- Runs in one implicit transaction; the final deletes leave no test rows.
--- Expects the Dockcheck tables to be empty.
+-- Safe to run with the worker live: it only touches its own test-* stations and user_test_* trips.
 
 -- Two stations for the trips to point at
 insert into public.stations (station_id, name, lat, lon, capacity, station_type) values
@@ -36,20 +36,28 @@ with u as (update public.trips set label = 'hijacked' returning 1)
   insert into r select 6, 'B edits A''s trip', '0 rows', (select count(*) || ' rows' from u);
 with d as (delete from public.trips returning 1)
   insert into r select 7, 'B deletes A''s trip', '0 rows', (select count(*) || ' rows' from d);
-insert into r select 8, 'B reads stations', '2', (select count(*)::text from public.stations);
+insert into r select 8, 'B reads stations', '2', (select count(*)::text from public.stations where station_id like 'test-%');
 insert into r select 9, 'B reads worker_runs', 'allowed', (select 'allowed: ' || count(*) from public.worker_runs);
 do $$ begin
-  update public.stations set bikes = 99;
+  update public.stations set bikes = 99 where station_id like 'test-%';
   insert into r values (10, 'B writes stations', 'blocked', 'ALLOWED');
 exception when others then insert into r values (10, 'B writes stations', 'blocked', 'blocked: ' || sqlerrm); end $$;
 do $$ begin
-  perform public.apply_station_status('[]'::jsonb);
+  perform public.apply_station_status('[]'::jsonb, now());
   insert into r values (11, 'B calls the worker function', 'blocked', 'ALLOWED');
 exception when others then insert into r values (11, 'B calls the worker function', 'blocked', 'blocked: ' || sqlerrm); end $$;
 do $$ begin
   insert into public.worker_runs (ok) values (true);
   insert into r values (12, 'B fakes a worker run', 'blocked', 'ALLOWED');
 exception when others then insert into r values (12, 'B fakes a worker run', 'blocked', 'blocked: ' || sqlerrm); end $$;
+do $$ begin
+  perform public.dockcheck_worker_secret();
+  insert into r values (16, 'B reads the worker secret', 'blocked', 'ALLOWED');
+exception when others then insert into r values (16, 'B reads the worker secret', 'blocked', 'blocked: ' || sqlerrm); end $$;
+do $$ begin
+  perform count(*) from public.feed_state;
+  insert into r values (17, 'B reads feed_state', 'blocked', 'ALLOWED');
+exception when others then insert into r values (17, 'B reads feed_state', 'blocked', 'blocked: ' || sqlerrm); end $$;
 
 -- Signed out
 set local role anon;

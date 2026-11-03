@@ -43,14 +43,15 @@ test("bad rows are skipped and counted, good rows kept", () => {
         { ...good, station_id: "future", last_reported: NOW / 1000 + 3600 },
         { ...good, station_id: "" },
         { ...good, station_id: "flag", is_renting: "yes" },
+        { ...good, station_id: "nodisabled", num_bikes_disabled: undefined }, // missing ≠ 0
         null,
       ],
     },
   };
   const p = parseStatus(feed, NOW);
-  assert.equal(p.total, 9);
+  assert.equal(p.total, 10);
   assert.equal(p.rows.length, 1);
-  assert.equal(p.rejected, 8);
+  assert.equal(p.rejected, 9);
 });
 
 test("a feed in another shape (e.g. GBFS v3) is a FeedError, not zero stations", () => {
@@ -72,4 +73,14 @@ test("station info: a station without a place is rejected", () => {
   const p = parseInformation({ last_updated: info.last_updated, data: { stations: [s, { ...s, station_id: "x", lat: "41.8" }] } });
   assert.equal(p.rows.length, 1);
   assert.equal(p.rejected, 1);
+});
+
+test("station info: missing capacity or type is rejected, not guessed", () => {
+  const s = info.data.stations[0];
+  const p = parseInformation({
+    last_updated: info.last_updated,
+    data: { stations: [s, { ...s, station_id: "nocap", capacity: undefined }, { ...s, station_id: "notype", station_type: undefined }] },
+  });
+  assert.equal(p.rows.length, 1);
+  assert.equal(p.rejected, 2);
 });

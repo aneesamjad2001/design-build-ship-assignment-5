@@ -75,8 +75,10 @@ export function parseStatus(json: unknown, nowMs: number): Parsed<StatusRow> {
     const bikes = s.num_bikes_available;
     const ebikes = s.num_ebikes_available;
     const docks = s.num_docks_available;
-    const bikes_disabled = s.num_bikes_disabled ?? 0;
-    const docks_disabled = s.num_docks_disabled ?? 0;
+    // Divvy sends every field below for every station (checked against the live feed),
+    // so a missing one means the format changed: reject the row, never default it to 0.
+    const bikes_disabled = s.num_bikes_disabled;
+    const docks_disabled = s.num_docks_disabled;
     const is_installed = flag(s.is_installed);
     const is_renting = flag(s.is_renting);
     const is_returning = flag(s.is_returning);
@@ -129,12 +131,14 @@ export function parseInformation(json: unknown): Parsed<InfoRow> {
     const name = typeof s.name === "string" ? s.name.trim() : "";
     const lat = s.lat;
     const lon = s.lon;
-    const capacity = s.capacity ?? 0;
-    const station_type = typeof s.station_type === "string" && s.station_type ? s.station_type : "classic";
+    // Required, not defaulted: a guessed capacity or type would overwrite known-good data.
+    const capacity = s.capacity;
+    const station_type = typeof s.station_type === "string" ? s.station_type.trim() : "";
 
     const valid =
       station_id !== null &&
       name !== "" &&
+      station_type !== "" &&
       typeof lat === "number" && lat >= -90 && lat <= 90 &&
       typeof lon === "number" && lon >= -180 && lon <= 180 &&
       count(capacity);

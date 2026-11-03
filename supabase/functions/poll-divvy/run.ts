@@ -14,16 +14,19 @@ export type RunRecord = {
   feed_unchanged: boolean;
   info_changed: number | null; // null = station info not refreshed this run
   duration_ms: number;
-  error: string | null;
+  error: string | null; // why it failed, or a note on an ok run
 };
+
+export type ApplyResult = { changed: number; unknown: number; missing: number; stale: boolean };
 
 export type Deps = {
   fetchJson(url: string): Promise<unknown>;
-  /** feed_updated_at of the latest ok run that actually applied a feed, or null. */
+  /** feed_updated_at of the latest ok run, or null. */
   lastAppliedFeedAt(): Promise<string | null>;
   /** ran_at of the latest run that refreshed station info, or null. */
   lastInfoRefreshAt(): Promise<string | null>;
-  applyStatus(rows: StatusRow[]): Promise<{ changed: number; unknown: number }>;
+  /** public.apply_station_status: writes only real changes; refuses feeds older than one already applied. */
+  applyStatus(rows: StatusRow[], feedUpdatedAt: string): Promise<ApplyResult>;
   applyInformation(rows: InfoRow[]): Promise<number>;
   recordRun(run: RunRecord): Promise<void>;
   now(): number;
@@ -36,8 +39,21 @@ export const MAX_REJECTED_SHARE = 0.1;
 /** Unknown station ids trigger an info refresh, but not more often than this. */
 export const INFO_RETRY_MS = 15 * 60 * 1000;
 
+export const STALE_NOTE = "A newer Divvy feed was already applied by an overlapping run; nothing written";
+
+/**
+ * Does the work, then records exactly one run. If recording itself fails, that error
+ * propagates (the caller logs it); it is never re-recorded as a second, failed run.
+ */
 export async function runOnce(deps: Deps, opts: Options = {}): Promise<RunRecord> {
   const started = deps.now();
+  const run = await work(deps, opts, started);
+  const record: RunRecord = { ...run, duration_ms: Math.max(0, Math.round(deps.now() - started)) };
+  await deps.recordRun(record);
+  return record;
+}
+
+async function work(deps: Deps, opts: Options, started: number): Promise<Omit<RunRecord, "duration_ms">> {
   let feedUpdatedAt: string | null = null;
   let stationsSeen: number | null = null;
   let rejected = 0;
@@ -52,11 +68,16 @@ export async function runOnce(deps: Deps, opts: Options = {}): Promise<RunRecord
     infoChanged = (infoChanged ?? 0) + (await deps.applyInformation(info.rows));
   };
 
-  const finish = async (run: Omit<RunRecord, "duration_ms">): Promise<RunRecord> => {
-    const record = { ...run, duration_ms: Math.max(0, Math.round(deps.now() - started)) };
-    await deps.recordRun(record);
-    return record;
-  };
+  const result = (ok: boolean, extra: { feed_unchanged?: boolean; error?: string | null } = {}) => ({
+    ok,
+    rows_changed: changed,
+    rows_rejected: rejected,
+    stations_seen: stationsSeen,
+    feed_updated_at: feedUpdatedAt,
+    feed_unchanged: extra.feed_unchanged ?? false,
+    info_changed: infoChanged,
+    error: extra.error ?? null,
+  });
 
   try {
     const status = parseStatus(await deps.fetchJson(STATUS_URL), started);
@@ -74,56 +95,30 @@ export async function runOnce(deps: Deps, opts: Options = {}): Promise<RunRecord
       // Divvy republishes about every 60 s; we run every 10 s. Same file = nothing to do.
       const last = await deps.lastAppliedFeedAt();
       if (last !== null && Date.parse(last) === Date.parse(status.feedUpdatedAt)) {
-        return await finish({
-          ok: true,
-          rows_changed: 0,
-          rows_rejected: rejected,
-          stations_seen: stationsSeen,
-          feed_updated_at: feedUpdatedAt,
-          feed_unchanged: true,
-          info_changed: null,
-          error: null,
-        });
+        return result(true, { feed_unchanged: true });
       }
     }
 
-    let result = await deps.applyStatus(status.rows);
-    changed = result.changed;
-    let note: string | null = null;
+    let applied = await deps.applyStatus(status.rows, status.feedUpdatedAt);
+    if (applied.stale) return result(true, { feed_unchanged: true, error: STALE_NOTE });
+    changed = applied.changed;
 
-    if (result.unknown > 0 && infoChanged === null) {
+    if (applied.unknown > 0 && infoChanged === null) {
       // New stations (or a first run on an empty table): learn their names, then retry.
       const lastRefresh = await deps.lastInfoRefreshAt();
       if (lastRefresh === null || started - Date.parse(lastRefresh) > INFO_RETRY_MS) {
         await refreshInfo();
-        result = await deps.applyStatus(status.rows);
-        changed += result.changed;
+        applied = await deps.applyStatus(status.rows, status.feedUpdatedAt);
+        if (applied.stale) return result(true, { error: STALE_NOTE });
+        changed += applied.changed;
       }
     }
-    if (result.unknown > 0) {
-      note = `${result.unknown} stations in status are missing from station info; skipped`;
-    }
 
-    return await finish({
-      ok: true,
-      rows_changed: changed,
-      rows_rejected: rejected,
-      stations_seen: stationsSeen,
-      feed_updated_at: feedUpdatedAt,
-      feed_unchanged: false,
-      info_changed: infoChanged,
-      error: note,
-    });
+    const notes: string[] = [];
+    if (applied.unknown > 0) notes.push(`${applied.unknown} stations in status are missing from station info; skipped`);
+    if (applied.missing > 0) notes.push(`${applied.missing} stations dropped out of the feed; marked not reporting`);
+    return result(true, { error: notes.length ? notes.join(". ") : null });
   } catch (e) {
-    return await finish({
-      ok: false,
-      rows_changed: changed,
-      rows_rejected: rejected,
-      stations_seen: stationsSeen,
-      feed_updated_at: feedUpdatedAt,
-      feed_unchanged: false,
-      info_changed: infoChanged,
-      error: e instanceof Error ? e.message : String(e),
-    });
+    return result(false, { error: e instanceof Error ? e.message : String(e) });
   }
 }

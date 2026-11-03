@@ -7,7 +7,7 @@
 // that Supabase injects into this function's environment; no key is in this code.
 
 import { runOnce } from "./run.ts";
-import type { Deps, RunRecord } from "./run.ts";
+import type { ApplyResult, Deps, RunRecord } from "./run.ts";
 import type { InfoRow, StatusRow } from "./divvy.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -82,8 +82,8 @@ const deps: Deps = {
   fetchJson,
   lastAppliedFeedAt: () => latest("feed_updated_at", "ok=eq.true"),
   lastInfoRefreshAt: () => latest("ran_at", "info_changed=not.is.null"),
-  applyStatus: async (rows: StatusRow[]) =>
-    (await rpc("apply_station_status", { p_rows: rows })) as { changed: number; unknown: number },
+  applyStatus: async (rows: StatusRow[], feedUpdatedAt: string) =>
+    (await rpc("apply_station_status", { p_rows: rows, p_feed_updated_at: feedUpdatedAt })) as ApplyResult,
   applyInformation: async (rows: InfoRow[]) =>
     (await rpc("apply_station_information", { p_rows: rows })) as number,
   recordRun: async (run: RunRecord) => {
@@ -92,11 +92,13 @@ const deps: Deps = {
   now: () => Date.now(),
 };
 
-// The expected worker secret, read once per warm instance.
+// The expected worker secret, cached per warm instance and re-read once on a mismatch
+// (so rotating it in Vault doesn't lock out the cron job until instances recycle).
 let expectedSecret: string | null = null;
+const readSecret = async () => (expectedSecret = (await rpc("dockcheck_worker_secret", {})) as string);
 
 function sameSecret(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
+  if (!a || !b || a.length !== b.length) return false;
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
@@ -105,15 +107,18 @@ function sameSecret(a: string, b: string): boolean {
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return new Response("POST only", { status: 405 });
 
+  const given = req.headers.get("x-worker-secret") ?? "";
+  let authorized = false;
   try {
-    expectedSecret ??= (await rpc("dockcheck_worker_secret", {})) as string;
+    const wasCached = expectedSecret !== null;
+    authorized = sameSecret(given, expectedSecret ?? (await readSecret()));
+    if (!authorized && wasCached && given) authorized = sameSecret(given, await readSecret());
   } catch (e) {
     console.error("Couldn't read the worker secret:", (e as Error).message);
     return new Response("Worker misconfigured", { status: 500 });
   }
 
-  const given = req.headers.get("x-worker-secret") ?? "";
-  if (!expectedSecret || !sameSecret(given, expectedSecret)) {
+  if (!authorized) {
     // Not recorded as a run: a stranger's request is not our worker failing.
     console.warn("Rejected a call without the worker secret");
     return new Response("Unauthorized", { status: 401 });
